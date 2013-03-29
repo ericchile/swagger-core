@@ -16,27 +16,37 @@
 
 package com.wordnik.swagger.sample.resource;
 
-import com.wordnik.swagger.annotations.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
+
+import com.wordnik.swagger.annotations.ApiError;
+import com.wordnik.swagger.annotations.ApiErrors;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.sample.data.UserData;
-import com.wordnik.swagger.sample.model.User;
 import com.wordnik.swagger.sample.exception.ApiException;
 import com.wordnik.swagger.sample.exception.NotFoundException;
-import com.wordnik.swagger.jaxrs.JavaHelp;
-
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.*;
+import com.wordnik.swagger.sample.model.User;
+import com.wordnik.swagger.sample.type.Code;
+import com.wordnik.swagger.sample.type.Username;
 
 public class UserResource {
-	static UserData userData = new UserData();
 
-	@POST
-	@ApiOperation(value = "Create user", notes = "This can only be done by the logged in user.")
-	public Response createUser(
-			@ApiParam(value = "Created user object", required = true) User user) {
-		userData.addUser(user);
-		return Response.ok().entity("").build();
-	}
+  static UserData userData = new UserData();
+
+  @POST
+  @ApiOperation(value = "Create user", notes = "This can only be done by the logged in user.")
+  public Response createUser(
+      @ApiParam(value = "Created user object", required = true) User user) {
+    userData.addUser(user);
+    return Response.ok().entity("").build();
+  }
 
     @POST
     @Path("/createWithArray")
@@ -58,64 +68,64 @@ public class UserResource {
         return Response.ok().entity("").build();
     }
 
-	@PUT
-	@Path("/{username}")
-	@ApiOperation(value = "Updated user", notes = "This can only be done by the logged in user.")
-	@ApiErrors(value = {
-			@ApiError(code = 400, reason = "Invalid user supplied"),
-			@ApiError(code = 404, reason = "User not found") })
-	public Response updateUser(
-			@ApiParam(value = "name that need to be deleted", required = true) @PathParam("username") String username,
-			@ApiParam(value = "Updated user object", required = true) User user) {
-		userData.addUser(user);
-		return Response.ok().entity("").build();
-	}
+  @PUT
+  @Path("/{username}")
+  @ApiOperation(value = "Updated user", notes = "This can only be done by the logged in user.")
+  @ApiErrors(value = {
+      @ApiError(code = 400, reason = "Invalid user supplied"),
+      @ApiError(code = 404, reason = "User not found") })
+  public Response updateUser(
+      @ApiParam(value = "name that need to be deleted", required = true) @PathParam("username") Code<Username> username,
+      @ApiParam(value = "Updated user object", required = true) User user) {
+    userData.addUser(user);
+    return Response.ok().entity("").build();
+  }
 
-	@DELETE
-	@Path("/{username}")
-	@ApiOperation(value = "Delete user", notes = "This can only be done by the logged in user.")
-	@ApiErrors(value = {
-			@ApiError(code = 400, reason = "Invalid username supplied"),
-			@ApiError(code = 404, reason = "User not found") })
-	public Response deleteUser(
-			@ApiParam(value = "The name that needs to be deleted", required = true) @PathParam("username") String username) {
-		userData.removeUser(username);
-		return Response.ok().entity("").build();
-	}
+  @DELETE
+  @Path("/{username}")
+  @ApiOperation(value = "Delete user", notes = "This can only be done by the logged in user.")
+  @ApiErrors(value = {
+      @ApiError(code = 400, reason = "Invalid username supplied"),
+      @ApiError(code = 404, reason = "User not found") })
+  public Response deleteUser(
+      @ApiParam(value = "The name that needs to be deleted", required = true) @PathParam("username") Code<Username> username) {
+    userData.removeUser(username.toString());
+    return Response.ok().entity("").build();
+  }
 
-	@GET
-	@Path("/{username}")
-	@ApiOperation(value = "Get user by user name", responseClass = "com.wordnik.swagger.sample.model.User")
-	@ApiErrors(value = {
-			@ApiError(code = 400, reason = "Invalid username supplied"),
-			@ApiError(code = 404, reason = "User not found") })
-	public Response getUserByName(
-			@ApiParam(value = "The name that needs to be fetched. Use user1 for testing. ", required = true) @PathParam("username") String username)
-		throws ApiException {
-		User user = userData.findUserByName(username);
-		if (null != user) {
-			return Response.ok().entity(user).build();
-		} else {
-			throw new NotFoundException(404, "User not found");
-		}
-	}
+  @GET
+  @Path("/{username}")
+  @ApiOperation(value = "Get user by user name", responseClass = "com.wordnik.swagger.sample.model.User")
+  @ApiErrors(value = {
+      @ApiError(code = 400, reason = "Invalid username supplied"),
+      @ApiError(code = 404, reason = "User not found") })
+  public Response getUserByName(
+      @ApiParam(value = "The name that needs to be fetched. Use user1 for testing. ", required = true) @PathParam("username") Code<Username> username)
+    throws ApiException {
+    User user = userData.findUserByName(username.toString());
+    if (null != user) {
+      return Response.ok().entity(user).build();
+    } else {
+      throw new NotFoundException(404, "User not found");
+    }
+  }
 
-	@GET
-	@Path("/login")
-	@ApiOperation(value = "Logs user into the system", responseClass = "string")
-	@ApiErrors(value = { @ApiError(code = 400, reason = "Invalid username/password supplied") })
-	public Response loginUser(
-			@ApiParam(value = "The user name for login", required = true) @QueryParam("username") String username,
-			@ApiParam(value = "The password for login in clear text", required = true) @QueryParam("password") String password) {
-		return Response.ok()
-				.entity("logged in user session:" + System.currentTimeMillis())
-				.build();
-	}
+  @GET
+  @Path("/login")
+  @ApiOperation(value = "Logs user into the system", responseClass = "string")
+  @ApiErrors(value = { @ApiError(code = 400, reason = "Invalid username/password supplied") })
+  public Response loginUser(
+      @ApiParam(value = "The user name for login", required = true) @QueryParam("username") String username,
+      @ApiParam(value = "The password for login in clear text", required = true) @QueryParam("password") Code<Username> password) {
+    return Response.ok()
+        .entity("logged in user session:" + System.currentTimeMillis())
+        .build();
+  }
 
-	@GET
-	@Path("/logout")
-	@ApiOperation(value = "Logs out current logged in user session")
-	public Response logoutUser() {
-		return Response.ok().entity("").build();
-	}
+  @GET
+  @Path("/logout")
+  @ApiOperation(value = "Logs out current logged in user session")
+  public Response logoutUser() {
+    return Response.ok().entity("").build();
+  }
 }
